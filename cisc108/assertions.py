@@ -47,28 +47,30 @@ Versions:
 '''
 __version__ = '0.2'
 
+# Number encapsulates bool, int, float, complex, decimal.Decimal, etc.
+from numbers import Number
+
 # Load in extract_stack, or provide shim for environments without it.
+
+
 def get_line_code():
     try:
         from traceback import extract_stack
         trace = extract_stack()
-        frame = trace[len(trace)-3]
+        frame = trace[len(trace) - 3]
         line = frame[1]
         code = frame[3]
         return line, code
-    except:
+    except BaseException:
         return None, None
-    
 
-# Number encapsulates bool, int, float, complex, decimal.Decimal, etc.
-from numbers import Number
 
 # Don't print message from assert_equal on success
 QUIET = False
 
 GENERATOR_TYPES = (type({}.keys()), type({}.values()), type({}.items()),
                    type(map(bool, [])), type(filter(bool, [])),
-                   type(range(0)), type(reversed([])), type(zip()), 
+                   type(range(0)), type(reversed([])), type(zip()),
                    type(enumerate([])))
 
 MESSAGE_LINE_CODE = " - [line {line}] {code}"
@@ -82,11 +84,12 @@ MESSAGE_GENERIC_FAILURE = (
 MESSAGE_GENERIC_SUCCESS = (
     "SUCCESS{context}")
 
+
 def assert_equal(x, y, precision=4, exact_strings=False, *args):
     """
     Checks an expected value using the _is_equal function.
     Prints a message if the test case passed or failed.
-    
+
     Args:
         x (Any): Any kind of python value. Should have been computed by
             the students' code (their actual answer).
@@ -100,7 +103,7 @@ def assert_equal(x, y, precision=4, exact_strings=False, *args):
     Returns:
         bool: Whether or not the assertion passed.
     """
-    
+
     # Can we add in the line number and code?
     line, code = get_line_code()
     if None in (line, code):
@@ -109,7 +112,7 @@ def assert_equal(x, y, precision=4, exact_strings=False, *args):
         context = MESSAGE_LINE_CODE.format(line=line, code=code)
 
     result = _is_equal(x, y, precision, exact_strings, *args)
-    if result == None:
+    if result is None:
         print(MESSAGE_UNRELATED_TYPES.format(context=context,
                                              x=x, x_type=type(x).__name__,
                                              y=y, y_type=type(y).__name__))
@@ -121,6 +124,7 @@ def assert_equal(x, y, precision=4, exact_strings=False, *args):
         print(MESSAGE_GENERIC_SUCCESS.format(context=context))
     return True
 
+
 def _is_equal(x, y, precision, exact_strings, *args):
     """
     _is_equal : thing thing -> boolean
@@ -130,27 +134,27 @@ def _is_equal(x, y, precision, exact_strings, *args):
     precision (by default, checks to with 4 decimal points for floating
     point numbers). Returns None when attempting to compare ints and floats
     to anything other than ints and floats.
-    
+
     Examples:
     >>> _is_equal('ab', 'a'+'b')
      True
-     
+
     >>> _is_equal(12.34, 12.35)
      False
-     
+
     >>> _is_equal(12.3456, 12.34568, 4)
      True
-         
+
     >>> _is_equal(12.3456, 12.34568w5)
      False
     """
     if isinstance(x, float) and isinstance(y, float):
         error = 10 ** (-precision)
         return abs(x - y) < error
-    elif isinstance(x, Number) and isinstance(y, Number) and type(x) == type(y):
+    elif isinstance(x, Number) and isinstance(y, Number) and isinstance(x, type(y)):
         return x == y
-    elif ( (isinstance(x, str) and isinstance(y, str)) or
-           (isinstance(x, bytes) and isinstance(y, bytes))):
+    elif ((isinstance(x, str) and isinstance(y, str)) or
+          (isinstance(x, bytes) and isinstance(y, bytes))):
         if exact_strings:
             return x == y
         else:
@@ -177,14 +181,15 @@ def _is_equal(x, y, precision, exact_strings, *args):
             x = list(x)
         if isinstance(y, GENERATOR_TYPES):
             y = list(y)
-        if type(x) != type(y):
+        if not isinstance(x, type(y)):
             return None
         return _are_sequences_equal(x, y, precision, exact_strings)
-    elif type(x) != type(y):
+    elif not isinstance(x, type(y)):
         return None
     else:
         return x == y
-        
+
+
 def _normalize_string(text):
     '''
     For strings:
@@ -200,6 +205,7 @@ def _normalize_string(text):
     # Return result
     return text
 
+
 def _are_sequences_equal(x, y, precision, exact_strings):
     '''
     For sequences that support __len__, __iter__, and should have the same
@@ -212,6 +218,7 @@ def _are_sequences_equal(x, y, precision, exact_strings):
             return False
     return True
 
+
 def _set_contains(needle, haystack, precision, exact_strings):
     '''
     Tests if the given needle is one of the elements of haystack, using
@@ -221,6 +228,7 @@ def _set_contains(needle, haystack, precision, exact_strings):
         if _is_equal(element, needle, precision, exact_strings):
             return True
     return False
+
 
 def _are_sets_equal(x, y, precision, exact_strings):
     '''
