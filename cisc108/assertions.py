@@ -48,12 +48,13 @@ Versions:
 __version__ = '0.2'
 
 # Number encapsulates bool, int, float, complex, decimal.Decimal, etc.
-from numbers import Number
-
-# Load in extract_stack, or provide shim for environments without it.
-
+try:
+    from numbers import Number
+except:
+    Number = (bool, int, float, complex)
 
 def get_line_code():
+    # Load in extract_stack, or provide shim for environments without it.
     try:
         from traceback import extract_stack
         trace = extract_stack()
