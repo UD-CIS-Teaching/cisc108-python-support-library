@@ -25,7 +25,7 @@ Examples
         return number / 2
     
     # Correctly handles floating points
-    assert_equal(add5(10), 5.0)
+    assert_equal(halve(10), 5.0)
     
 Output
 ======
