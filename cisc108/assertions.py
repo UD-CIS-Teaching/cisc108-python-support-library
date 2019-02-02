@@ -68,10 +68,11 @@ def get_line_code():
 # Don't print message from assert_equal on success
 QUIET = False
 
-GENERATOR_TYPES = (type({}.keys()), type({}.values()), type({}.items()),
-                   type(map(bool, [])), type(filter(bool, [])),
-                   type(range(0)), type(reversed([])), type(zip()),
-                   type(enumerate([])))
+SET_GENERATOR_TYPES = (type({}.keys()), type({}.values()), type({}.items()))
+
+LIST_GENERATOR_TYPES = (type(map(bool, [])), type(filter(bool, [])),
+                        type(range(0)), type(reversed([])), type(zip()),
+                        type(enumerate([])))
 
 MESSAGE_LINE_CODE = " - [line {line}] {code}"
 MESSAGE_UNRELATED_TYPES = (
@@ -148,6 +149,17 @@ def _is_equal(x, y, precision, exact_strings, *args):
     >>> _is_equal(12.3456, 12.34568w5)
      False
     """
+    
+    # Check if generators
+    if isinstance(x, SET_GENERATOR_TYPES):
+        x = set(x)
+    elif isinstance(x, LIST_GENERATOR_TYPES):
+        x = list(x)
+    if isinstance(y, SET_GENERATOR_TYPES):
+        y = set(y)
+    elif isinstance(y, LIST_GENERATOR_TYPES):
+        y = list(y)
+    
     if isinstance(x, float) and isinstance(y, float):
         error = 10 ** (-precision)
         return abs(x - y) < error
@@ -176,14 +188,6 @@ def _is_equal(x, y, precision, exact_strings, *args):
             if not _is_equal(x[key], y[key], precision, exact_strings):
                 return False
         return True
-    elif isinstance(x, GENERATOR_TYPES) or isinstance(y, GENERATOR_TYPES):
-        if isinstance(x, GENERATOR_TYPES):
-            x = list(x)
-        if isinstance(y, GENERATOR_TYPES):
-            y = list(y)
-        if not isinstance(x, type(y)):
-            return None
-        return _are_sequences_equal(x, y, precision, exact_strings)
     elif not isinstance(x, type(y)):
         return None
     else:

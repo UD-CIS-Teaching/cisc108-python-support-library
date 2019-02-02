@@ -137,14 +137,14 @@ class TestAssertEqual(unittest.TestCase):
                          "FAILURE - [line 135] self.assertFalse(assert_equal(5, range(5))), predicted answer was range(0, 5) ('range'), computed answer was 5 ('int'). You attempted to compare unrelated data types.")
                          
         with captured_output() as (out, err):
-            self.assertFalse(assert_equal({1: 2, 4: 3}.items(), [(1, 2), (3, 4)]))
+            self.assertFalse(assert_equal({1: 2, 4: 3}.items(), {(1, 2), (3, 4)}))
         self.assertEqual(out.getvalue().strip(),
-                         "FAILURE - [line 140] self.assertFalse(assert_equal({1: 2, 4: 3}.items(), [(1, 2), (3, 4)])), predicted answer was [(1, 2), (3, 4)], computed answer was dict_items([(1, 2), (4, 3)]).")
+                         "FAILURE - [line 140] self.assertFalse(assert_equal({1: 2, 4: 3}.items(), {(1, 2), (3, 4)})), predicted answer was {(1, 2), (3, 4)}, computed answer was dict_items([(1, 2), (4, 3)]).")
                          
         with captured_output() as (out, err):
-            self.assertTrue(assert_equal({1: 2, 3: 4}.items(), [(1, 2), (3, 4)]))
+            self.assertTrue(assert_equal({1: 2, 3: 4}.items(), {(1, 2), (3, 4)}))
         self.assertEqual(out.getvalue().strip(),
-                         "SUCCESS - [line 145] self.assertTrue(assert_equal({1: 2, 3: 4}.items(), [(1, 2), (3, 4)]))")
+                         "SUCCESS - [line 145] self.assertTrue(assert_equal({1: 2, 3: 4}.items(), {(1, 2), (3, 4)}))")
     
     def test_classes(self):
         self.maxDiff = None
