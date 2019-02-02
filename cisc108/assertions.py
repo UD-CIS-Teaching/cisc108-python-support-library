@@ -47,8 +47,19 @@ Versions:
 '''
 __version__ = '0.2'
 
-import traceback
-from types import GeneratorType
+# Load in extract_stack, or provide shim for environments without it.
+def get_line_code():
+    try:
+        from traceback import extract_stack
+        trace = extract_stack()
+        frame = trace[len(trace)-3]
+        line = frame[1]
+        code = frame[3]
+        return line, code
+    except:
+        return None, None
+    
+
 # Number encapsulates bool, int, float, complex, decimal.Decimal, etc.
 from numbers import Number
 
@@ -60,15 +71,16 @@ GENERATOR_TYPES = (type({}.keys()), type({}.values()), type({}.items()),
                    type(range(0)), type(reversed([])), type(zip()), 
                    type(enumerate([])))
 
+MESSAGE_LINE_CODE = " - [line {line}] {code}"
 MESSAGE_UNRELATED_TYPES = (
-    "FAILURE - [line {line}] {code}, predicted answer was {y!r} ({y_type!r}), "
+    "FAILURE{context}, predicted answer was {y!r} ({y_type!r}), "
     "computed answer was {x!r} ({x_type!r}). "
     "You attempted to compare unrelated data types.")
 MESSAGE_GENERIC_FAILURE = (
-    "FAILURE - [line {line}] {code}, predicted answer was {y!r}, "
+    "FAILURE{context}, predicted answer was {y!r}, "
     "computed answer was {x!r}.")
 MESSAGE_GENERIC_SUCCESS = (
-    "SUCCESS - [line {line}] {code}")
+    "SUCCESS{context}")
 
 def assert_equal(x, y, precision=4, exact_strings=False, *args):
     """
@@ -89,23 +101,24 @@ def assert_equal(x, y, precision=4, exact_strings=False, *args):
         bool: Whether or not the assertion passed.
     """
     
-    trace = traceback.extract_stack()
-    frame = trace[len(trace)-2]
-    
-    line = frame.lineno
-    code = frame[3]
+    # Can we add in the line number and code?
+    line, code = get_line_code()
+    if None in (line, code):
+        context = ""
+    else:
+        context = MESSAGE_LINE_CODE.format(line=line, code=code)
 
     result = _is_equal(x, y, precision, exact_strings, *args)
     if result == None:
-        print(MESSAGE_UNRELATED_TYPES.format(line=line, code=code,
+        print(MESSAGE_UNRELATED_TYPES.format(context=context,
                                              x=x, x_type=type(x).__name__,
                                              y=y, y_type=type(y).__name__))
         return False
     elif not result:
-        print(MESSAGE_GENERIC_FAILURE.format(line=line, code=code, x=x, y=y))
+        print(MESSAGE_GENERIC_FAILURE.format(context=context, x=x, y=y))
         return False
     elif not QUIET:
-        print(MESSAGE_GENERIC_SUCCESS.format(line=line, code=code))
+        print(MESSAGE_GENERIC_SUCCESS.format(context=context))
     return True
 
 def _is_equal(x, y, precision, exact_strings, *args):
@@ -164,6 +177,8 @@ def _is_equal(x, y, precision, exact_strings, *args):
             x = list(x)
         if isinstance(y, GENERATOR_TYPES):
             y = list(y)
+        if type(x) != type(y):
+            return None
         return _are_sequences_equal(x, y, precision, exact_strings)
     elif type(x) != type(y):
         return None
@@ -214,9 +229,6 @@ def _are_sets_equal(x, y, precision, exact_strings):
     if len(x) != len(y):
         return False
     for x_element in x:
-        if not _set_contains(x_element, y):
-            return False
-    for y_element in x:
-        if not _set_contains(y_element, x):
+        if not _set_contains(x_element, y, precision, exact_strings):
             return False
     return True
