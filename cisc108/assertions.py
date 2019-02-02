@@ -62,7 +62,7 @@ def get_line_code():
         line = frame[1]
         code = frame[3]
         return line, code
-    except BaseException:
+    except Exception:
         return None, None
 
 
