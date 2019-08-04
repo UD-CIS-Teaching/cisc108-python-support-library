@@ -53,6 +53,7 @@ try:
 except:
     Number = (bool, int, float, complex)
 
+
 def get_line_code():
     # Load in extract_stack, or provide shim for environments without it.
     try:
@@ -64,6 +65,22 @@ def get_line_code():
         return line, code
     except Exception:
         return None, None
+
+
+def _normalize_string(text):
+    '''
+    For strings:
+    - strips whitespace from each line
+    - lower cases
+    '''
+    # Lowercase
+    text = text.lower()
+    # Strip whitespace from each line
+    lines = text.split("\n")
+    lines = [line.strip() for line in lines if line.strip()]
+    text = "\n".join(lines)
+    # Return result
+    return text
 
 
 # Don't print message from assert_equal on success
@@ -87,7 +104,7 @@ MESSAGE_GENERIC_SUCCESS = (
     "SUCCESS{context}")
 
 
-def assert_equal(x, y, precision=4, exact_strings=False, *args):
+def assert_equal(x, y, precision=4, exact_strings=False, *args) -> bool:
     """
     Checks an expected value using the _is_equal function.
     Prints a message if the test case passed or failed.
@@ -150,7 +167,7 @@ def _is_equal(x, y, precision, exact_strings, *args):
     >>> _is_equal(12.3456, 12.34568w5)
      False
     """
-    
+
     # Check if generators
     if isinstance(x, SET_GENERATOR_TYPES):
         x = set(x)
@@ -160,7 +177,7 @@ def _is_equal(x, y, precision, exact_strings, *args):
         y = set(y)
     elif isinstance(y, LIST_GENERATOR_TYPES):
         y = list(y)
-    
+
     if isinstance(x, float) and isinstance(y, float):
         error = 10 ** (-precision)
         return abs(x - y) < error
@@ -193,22 +210,6 @@ def _is_equal(x, y, precision, exact_strings, *args):
         return None
     else:
         return x == y
-
-
-def _normalize_string(text):
-    '''
-    For strings:
-    - strips whitespace from each line
-    - lower cases
-    '''
-    # Lowercase
-    text = text.lower()
-    # Strip whitespace from each line
-    lines = text.split("\n")
-    lines = [line.strip() for line in lines if line.strip()]
-    text = "\n".join(lines)
-    # Return result
-    return text
 
 
 def _are_sequences_equal(x, y, precision, exact_strings):
@@ -245,3 +246,89 @@ def _are_sets_equal(x, y, precision, exact_strings):
         if not _set_contains(x_element, y, precision, exact_strings):
             return False
     return True
+
+
+def assert_true(x) -> bool:
+    """
+    Checks an expected value using the _is_true function.
+    Prints a message if the test case passed or failed.
+
+    Args:
+        x (Any): Any kind of python value. Should have been computed by
+            the students' code (their actual answer).
+    Returns:
+        bool: Whether or not the assertion passed.
+    """
+    line, code = get_line_code()
+    if None in (line, code):
+        context = ""
+    else:
+        context = MESSAGE_LINE_CODE.format(line=line, code=code)
+
+    result = _is_true(x)
+    if result is None:
+        print(MESSAGE_UNRELATED_TYPES.format(context=context,
+                                             x=x, x_type=type(x).__name__,
+                                             y=True, y_type=type(True).__name__))
+        return False
+    elif not result:
+        print(MESSAGE_GENERIC_FAILURE.format(context=context, x=x, y=True))
+        return False
+    elif not QUIET:
+        print(MESSAGE_GENERIC_SUCCESS.format(context=context))
+    return True
+
+
+def assert_false(x) -> bool:
+    """
+    Checks an expected value using the _is_true function.
+    Prints a message if the test case passed or failed.
+
+    Args:
+        x (Any): Any kind of python value. Should have been computed by
+            the students' code (their actual answer).
+    Returns:
+        bool: Whether or not the assertion passed.
+    """
+    line, code = get_line_code()
+    if None in (line, code):
+        context = ""
+    else:
+        context = MESSAGE_LINE_CODE.format(line=line, code=code)
+
+    result = _is_true(x)
+    if result is None:
+        print(MESSAGE_UNRELATED_TYPES.format(context=context,
+                                             x=x, x_type=type(x).__name__,
+                                             y=False, y_type=type(False).__name__))
+        return False
+    elif result:
+        print(MESSAGE_GENERIC_FAILURE.format(context=context, x=x, y=False))
+        return False
+    elif not QUIET:
+        print(MESSAGE_GENERIC_SUCCESS.format(context=context))
+    return True
+
+
+def _is_true(x):
+    """
+    _is_true : thing -> boolean
+    _is_true : number -> boolean
+    Determines whether the argument is true.
+    Returns None when attempting to assert a non-boolean
+
+    Examples:
+    >>> _is_true(True)
+     False
+
+    >>> _is_true("hi")
+     None
+
+    >>> _is_true(False)
+     False
+    """
+
+    if not isinstance(x, bool):
+        return None
+    else:
+        return x

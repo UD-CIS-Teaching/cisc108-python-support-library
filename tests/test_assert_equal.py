@@ -1,26 +1,7 @@
 from cisc108 import assert_equal
 import unittest
-import os
 import sys
-import re
-from helper_methods import generate_regex
-from textwrap import dedent
-from io import StringIO
-from contextlib import contextmanager
-
-cisc108_library = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
-sys.path.insert(0, cisc108_library)
-
-
-@contextmanager
-def captured_output():
-    new_out, new_err = StringIO(), StringIO()
-    old_out, old_err = sys.stdout, sys.stderr
-    try:
-        sys.stdout, sys.stderr = new_out, new_err
-        yield sys.stdout, sys.stderr
-    finally:
-        sys.stdout, sys.stderr = old_out, old_err
+from helper_methods import captured_output, generate_regex
 
 
 class TestAssertEqual(unittest.TestCase):
