@@ -8,7 +8,7 @@ from contextlib import contextmanager
 cisc108_library = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 sys.path.insert(0, cisc108_library)
 
-from cisc108 import assert_equal
+from cisc108 import assert_equal, student_tests
 
 @contextmanager
 def captured_output():
@@ -20,13 +20,14 @@ def captured_output():
     finally:
         sys.stdout, sys.stderr = old_out, old_err
 
+
 class TestAssertEqual(unittest.TestCase):
 
     def test_integers(self):
         with captured_output() as (out, err):
             self.assertTrue(assert_equal(5, 5))
         self.assertEqual(out.getvalue().strip(),
-                         "SUCCESS - [line 27] self.assertTrue(assert_equal(5, 5))")
+                         "TEST PASSED - [line 27] self.assertTrue(assert_equal(5, 5))")
     
         with captured_output() as (out, err):
             self.assertFalse(assert_equal(5, 10))
@@ -42,7 +43,7 @@ class TestAssertEqual(unittest.TestCase):
         with captured_output() as (out, err):
             self.assertTrue(assert_equal(10/2, 5.0))
         self.assertEqual(out.getvalue().strip(),
-                         "SUCCESS - [line 43] self.assertTrue(assert_equal(10/2, 5.0))")
+                         "TEST PASSED - [line 43] self.assertTrue(assert_equal(10/2, 5.0))")
     
         with captured_output() as (out, err):
             self.assertFalse(assert_equal(3.1, 3.2))
@@ -53,12 +54,12 @@ class TestAssertEqual(unittest.TestCase):
         with captured_output() as (out, err):
             self.assertTrue(assert_equal('Hello world!', 'Hello world!'))
         self.assertEqual(out.getvalue().strip(),
-                         "SUCCESS - [line 54] self.assertTrue(assert_equal('Hello world!', 'Hello world!'))")
+                         "TEST PASSED - [line 54] self.assertTrue(assert_equal('Hello world!', 'Hello world!'))")
                          
         with captured_output() as (out, err):
             self.assertTrue(assert_equal('Hello world!', 'Hello World!'))
         self.assertEqual(out.getvalue().strip(),
-                         "SUCCESS - [line 59] self.assertTrue(assert_equal('Hello world!', 'Hello World!'))")
+                         "TEST PASSED - [line 59] self.assertTrue(assert_equal('Hello world!', 'Hello World!'))")
     
         with captured_output() as (out, err):
             self.assertFalse(assert_equal('Hello world!', 'Hello World!', exact_strings=True))
@@ -69,7 +70,7 @@ class TestAssertEqual(unittest.TestCase):
         with captured_output() as (out, err):
             self.assertTrue(assert_equal([1, 5.0, 'Test'], [1, 5.0, 'test']))
         self.assertEqual(out.getvalue().strip(),
-                         "SUCCESS - [line 70] self.assertTrue(assert_equal([1, 5.0, 'Test'], [1, 5.0, 'test']))")
+                         "TEST PASSED - [line 70] self.assertTrue(assert_equal([1, 5.0, 'Test'], [1, 5.0, 'test']))")
     
         with captured_output() as (out, err):
             self.assertFalse(assert_equal([1, 2], [1, 2, 3]))
@@ -85,7 +86,7 @@ class TestAssertEqual(unittest.TestCase):
         with captured_output() as (out, err):
             self.assertTrue(assert_equal({1, 5, 5, 'Test'}, {1, 5, 'test', 'test'}))
         self.assertEqual(out.getvalue().strip(),
-                         "SUCCESS - [line 86] self.assertTrue(assert_equal({1, 5, 5, 'Test'}, {1, 5, 'test', 'test'}))")
+                         "TEST PASSED - [line 86] self.assertTrue(assert_equal({1, 5, 5, 'Test'}, {1, 5, 'test', 'test'}))")
     
         with captured_output() as (out, err):
             self.assertFalse(assert_equal({1, 2}, {1, 2, 3}))
@@ -101,7 +102,7 @@ class TestAssertEqual(unittest.TestCase):
         with captured_output() as (out, err):
             self.assertTrue(assert_equal({1.0: 5, 'Test': True}, {'Test': True, 1.0: 5}))
         self.assertEqual(out.getvalue().strip(),
-                         "SUCCESS - [line 102] self.assertTrue(assert_equal({1.0: 5, 'Test': True}, {'Test': True, 1.0: 5}))")
+                         "TEST PASSED - [line 102] self.assertTrue(assert_equal({1.0: 5, 'Test': True}, {'Test': True, 1.0: 5}))")
     
         with captured_output() as (out, err):
             self.assertFalse(assert_equal({1: 2}, {1: 2, 3: 5}))
@@ -124,12 +125,12 @@ class TestAssertEqual(unittest.TestCase):
         with captured_output() as (out, err):
             self.assertTrue(assert_equal(range(5), [0, 1, 2, 3, 4]))
         self.assertEqual(out.getvalue().strip(),
-                         "SUCCESS - [line 125] self.assertTrue(assert_equal(range(5), [0, 1, 2, 3, 4]))")
+                         "TEST PASSED - [line 125] self.assertTrue(assert_equal(range(5), [0, 1, 2, 3, 4]))")
         
         with captured_output() as (out, err):
             self.assertTrue(assert_equal([0, 1, 2, 3, 4], range(5)))
         self.assertEqual(out.getvalue().strip(),
-                         "SUCCESS - [line 130] self.assertTrue(assert_equal([0, 1, 2, 3, 4], range(5)))")
+                         "TEST PASSED - [line 130] self.assertTrue(assert_equal([0, 1, 2, 3, 4], range(5)))")
 
         with captured_output() as (out, err):
             self.assertFalse(assert_equal(5, range(5)))
@@ -144,7 +145,7 @@ class TestAssertEqual(unittest.TestCase):
         with captured_output() as (out, err):
             self.assertTrue(assert_equal({1: 2, 3: 4}.items(), {(1, 2), (3, 4)}))
         self.assertEqual(out.getvalue().strip(),
-                         "SUCCESS - [line 145] self.assertTrue(assert_equal({1: 2, 3: 4}.items(), {(1, 2), (3, 4)}))")
+                         "TEST PASSED - [line 145] self.assertTrue(assert_equal({1: 2, 3: 4}.items(), {(1, 2), (3, 4)}))")
     
     def test_classes(self):
         self.maxDiff = None
@@ -165,12 +166,12 @@ class TestAssertEqual(unittest.TestCase):
         with captured_output() as (out, err):
             self.assertTrue(assert_equal(ada, my_dog))
         self.assertEqual(out.getvalue().strip(),
-                         "SUCCESS - [line 166] self.assertTrue(assert_equal(ada, my_dog))")
+                         "TEST PASSED - [line 166] self.assertTrue(assert_equal(ada, my_dog))")
         
         with captured_output() as (out, err):
             self.assertFalse(assert_equal(5, my_dog))
         self.assertEqual(out.getvalue().strip(),
-                         "FAILURE - [line 171] self.assertFalse(assert_equal(5, my_dog)), predicted answer was ada ('Dog'), computed answer was 5 ('int'). You attempted to compare unrelated data types.")
+                         "FAILURE - [line 171] self.assertFalse(assert_equal(5, my_dog)), predicted answer was 'ada' ('Dog'), computed answer was 5 ('int'). You attempted to compare unrelated data types.")
                          
         with captured_output() as (out, err):
             self.assertFalse(assert_equal(ada, evil_ada))
@@ -190,7 +191,7 @@ class TestAssertEqual(unittest.TestCase):
         with captured_output() as (out, err):
             self.assertTrue(assert_equal(a, b))
         self.assertEqual(out.getvalue().strip(),
-                         "SUCCESS - [line 191] self.assertTrue(assert_equal(a, b))")
+                         "TEST PASSED - [line 191] self.assertTrue(assert_equal(a, b))")
     
         c = frozenset((1, 2))
         d = frozenset((1, 2, 3))
@@ -208,7 +209,7 @@ class TestAssertEqual(unittest.TestCase):
         
         with captured_output() as (out, err):
             self.assertTrue(cisc108.assert_equal(5, 5))
-        self.assertEqual(out.getvalue().strip(), "SUCCESS")
+        self.assertEqual(out.getvalue().strip(), "TEST PASSED")
         
         with captured_output() as (out, err):
             self.assertFalse(cisc108.assert_equal(5, 5.0))
@@ -216,6 +217,32 @@ class TestAssertEqual(unittest.TestCase):
         
         # Restore traceback
         sys.modules['traceback'] = old['traceback']
+    
+    def test_report(self):
+        student_tests.reset()
+        with captured_output() as (out, err):
+            assert_equal(5, 10.0)
+            assert_equal(5, 13.0)
+            assert_equal(5, 6)
+            assert_equal(5, 8)
+            assert_equal(5, 5)
+            assert_equal(5, 5)
+        self.assertEqual(student_tests.tests, 6)
+        self.assertEqual(student_tests.failures, 4)
+        self.assertEqual(student_tests.successes, 2)
+    
+    def test_report_from_assert_equal(self):
+        assert_equal.student_tests.reset()
+        with captured_output() as (out, err):
+            assert_equal(5, 10.0)
+            assert_equal(5, 13.0)
+            assert_equal(5, 6)
+            assert_equal(5, 8)
+            assert_equal(5, 5)
+            assert_equal(5, 5)
+        self.assertEqual(assert_equal.student_tests.tests, 6)
+        self.assertEqual(assert_equal.student_tests.failures, 4)
+        self.assertEqual(assert_equal.student_tests.successes, 2)
 
 if __name__ == '__main__':
     unittest.main(buffer=False)

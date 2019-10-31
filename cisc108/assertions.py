@@ -2,6 +2,9 @@
 CISC106 Module that includes some basic helper functions such as assert_equal().
 
 Versions:
+0.2.1 - 2019-JAN-23, Austin Cory Bart
+ + Keep track of tests' counts in student_tests
+ + Improve make_type_name for BlockPy compatibility
 0.2 - 2019-JAN-02, Modified by Austin Cory Bart
  + Renamed functions to be in line with common Python convention
  + Packaged into an actual library on PyPI, with tests and stuff.
@@ -45,13 +48,29 @@ Versions:
 0.1
  + Initial assert_equal, display, animate, bind
 '''
-__version__ = '0.2'
+__version__ = '0.2.1'
 
 # Number encapsulates bool, int, float, complex, decimal.Decimal, etc.
 try:
     from numbers import Number
 except:
     Number = (bool, int, float, complex)
+    
+try:
+    bytes
+except NameError:
+    bytes = str
+
+try:
+    frozenset()
+except:
+    frozenset = tuple()
+    
+def make_type_name(value):
+    try:
+        return type(value).__name__
+    except Exception:
+        return str(type(value))[8:-2]
 
 def get_line_code():
     # Load in extract_stack, or provide shim for environments without it.
@@ -84,8 +103,28 @@ MESSAGE_GENERIC_FAILURE = (
     "FAILURE{context}, predicted answer was {y!r}, "
     "computed answer was {x!r}.")
 MESSAGE_GENERIC_SUCCESS = (
-    "SUCCESS{context}")
+    "TEST PASSED{context}")
 
+class StudentTestReport:
+    def __init__(self):
+        self.reset()
+    def __repr__(self):
+        return str(self)
+    def __str__(self):
+        return ('<failures={failures}'
+                ',successes={successes}'
+                ',tests={tests},lines={lines}>'
+        ).format(
+            failures=self.failures, successes=self.successes, tests=self.tests,
+            lines=', '.join(self.lines)
+        )
+    def reset(self):
+        self.failures = 0
+        self.successes = 0
+        self.tests = 0
+        self.lines = []
+    
+student_tests = StudentTestReport()
 
 def assert_equal(x, y, precision=4, exact_strings=False, *args):
     """
@@ -112,20 +151,28 @@ def assert_equal(x, y, precision=4, exact_strings=False, *args):
         context = ""
     else:
         context = MESSAGE_LINE_CODE.format(line=line, code=code)
+        student_tests.lines.append(line)
 
     result = _is_equal(x, y, precision, exact_strings, *args)
+    student_tests.tests += 1
     if result is None:
+        student_tests.failures += 1
         print(MESSAGE_UNRELATED_TYPES.format(context=context,
-                                             x=x, x_type=type(x).__name__,
-                                             y=y, y_type=type(y).__name__))
+                                             x=repr(x), x_type=make_type_name(x),
+                                             y=repr(y), y_type=make_type_name(y)))
         return False
     elif not result:
-        print(MESSAGE_GENERIC_FAILURE.format(context=context, x=x, y=y))
+        student_tests.failures += 1
+        print(MESSAGE_GENERIC_FAILURE.format(context=context, x=repr(x), y=repr(y)))
         return False
     elif not QUIET:
         print(MESSAGE_GENERIC_SUCCESS.format(context=context))
+    student_tests.successes += 1
     return True
 
+# Hack to allow anyone with an assert_equal reference to get the results
+#   since they are global across all calls. Weird strategy!
+assert_equal.student_tests = student_tests
 
 def _is_equal(x, y, precision, exact_strings, *args):
     """
@@ -152,14 +199,14 @@ def _is_equal(x, y, precision, exact_strings, *args):
     """
     
     # Check if generators
-    if isinstance(x, SET_GENERATOR_TYPES):
-        x = set(x)
-    elif isinstance(x, LIST_GENERATOR_TYPES):
+    if isinstance(x, LIST_GENERATOR_TYPES):
         x = list(x)
-    if isinstance(y, SET_GENERATOR_TYPES):
-        y = set(y)
-    elif isinstance(y, LIST_GENERATOR_TYPES):
+    elif isinstance(x, SET_GENERATOR_TYPES):
+        x = set(x)
+    if isinstance(y, LIST_GENERATOR_TYPES):
         y = list(y)
+    elif isinstance(y, SET_GENERATOR_TYPES):
+        y = set(y)
     
     if isinstance(x, float) and isinstance(y, float):
         error = 10 ** (-precision)
