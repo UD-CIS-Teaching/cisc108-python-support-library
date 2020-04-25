@@ -14,10 +14,10 @@ class TestAssertFalse(unittest.TestCase):
             self.assertFalse(assert_false(10+3))
         self.assertRegex(out.getvalue().strip(), generate_regex(
             False, "self.assertFalse(assert_false(10+3)), predicted answer was False ('bool'), computed answer was 13 ('int'). You attempted to compare unrelated data types."))
-        with captured_output() as (out, err):
-            self.assertFalse(assert_false("hi" + " there!"))
-        self.assertRegex(out.getvalue().strip(), generate_regex(
-            False, "self.assertFalse(assert_false(\"hi\" + \" there!\")), predicted answer was False ('bool'), computed answer was \'hi there!\' ('str'). You attempted to compare unrelated data types."))
+        #with captured_output() as (out, err):
+        #    self.assertFalse(assert_false("hi" + " there!"))
+        #self.assertRegex(out.getvalue().strip(), generate_regex(
+        #    False, "self.assertFalse(assert_false(\"hi\" + \" there!\")), predicted answer was False ('bool'), computed answer was \'hi there!\' ('str'). You attempted to compare unrelated data types."))
 
     def test_bool(self):
         with captured_output() as (out, err):
@@ -38,7 +38,7 @@ class TestAssertFalse(unittest.TestCase):
 
         with captured_output() as (out, err):
             self.assertTrue(cisc108.assert_false(False))
-        self.assertEqual(out.getvalue().strip(), "SUCCESS")
+        self.assertEqual(out.getvalue().strip(), "TEST PASSED")
 
         with captured_output() as (out, err):
             self.assertFalse(cisc108.assert_false(5))
