@@ -1,7 +1,13 @@
 '''
-CISC106 Module that includes some basic helper functions such as assert_equal().
+CISC108 Module that includes some basic helper functions such as assert_equal().
 
 Versions:
+0.4 - 2020-APR-25, Austin Cory Bart
+ + Added new assert_type function
+ + Added tests for assert_type
+0.3 - 2019-JUL-??, Eleonor Bart
+ + Vastly improved unit tests' flexibility
+ + Started work on assert_false and assert_true
 0.2.1 - 2019-JAN-23, Austin Cory Bart
  + Keep track of tests' counts in student_tests
  + Improve make_type_name for BlockPy compatibility
@@ -296,6 +302,8 @@ def _are_sets_equal(x, y, precision, exact_strings):
             return False
     return True
 
+################################################################################
+# Truthiness stuff
 
 def assert_true(x) -> bool:
     """
@@ -381,3 +389,127 @@ def _is_true(x):
         return None
     else:
         return x
+        
+################################################################################
+# Type Checking
+
+BETTER_TYPE_NAMES = {
+    str: 'string',
+    int: 'integer',
+    float: 'float',
+    bool: 'boolean',
+    dict: 'dictionary',
+    list: 'list'
+}
+
+def _get_name(value):
+    try:
+        return BETTER_TYPE_NAMES.get(value, value.__name__)
+    except Exception:
+        return str(value)[8:-2]
+    
+def _make_key_list(values):
+    if not values:
+        return "and there were no keys at all"
+    elif len(values) == 1:
+        return "but there was the key {!r}".format(values[0])
+    else:
+        return "but there were the keys "+ (", ".join(sorted(map(repr, values[:-1])))) + " and {!r}".format(values[-1])
+
+WRONG_TYPE_MESSAGE = " was the wrong type. Expected type was {y_type!r}, but actual value was {x} ({x_type!r})."
+WRONG_KEY_TYPE_MESSAGE = " had a wrong type for a key. Expected type of all keys was {y_type!r}, but there was the key {x} ({x_type!r})."
+MISSING_KEY_MESSAGE = " was missing the key {!r}, {}."
+EXTRA_KEYS_MESSAGE = " had all the correct keys ({}), but also had these unexpected keys: {}"
+NOT_A_TYPE_MESSAGE = " was the value {x!r} ({x_type!r}). However, that's not important because the expected type ({y}) doesn't make sense! The type definition should not have literal values like {y} in it, only types (like {y_type}). The literal values go into instances of the type."
+
+def _validate_dictionary_type(value, expected_type, path):
+    if not isinstance(value, dict):
+        return path + WRONG_TYPE_MESSAGE.format(x=repr(value), x_type=_get_name(type(value)), y_type="dictionary")
+    for expected_key, expected_value in expected_type.items():
+        if isinstance(expected_key, str):
+            if expected_key not in value:
+                return path + MISSING_KEY_MESSAGE.format(expected_key, _make_key_list(list(value.keys())))
+            reason = _validate_type(value[expected_key], expected_value,
+                                    path+"[{!r}]".format(expected_key))
+            if reason:
+                return reason
+        elif isinstance(expected_key, type):
+            for k, v in value.items():
+                new_path = path+"[{!r}]".format(k)
+                if not isinstance(k, expected_key):
+                    return path + WRONG_KEY_TYPE_MESSAGE.format(x=repr(k), x_type=_get_name(type(k)), y_type=_get_name(expected_key))
+                reason = _validate_type(v, expected_value, new_path)
+                if reason:
+                    return reason
+            break # only support one key/value type in Lookup style
+    else:
+        if len(expected_type) != len(value):
+            unexpected_keys = set(value.keys()) - set(expected_type.keys())
+            unexpected_keys = ", ".join(sorted(map(repr, unexpected_keys)))
+            expected_keys = ", ".join(sorted(map(repr, expected_type)))
+            return path + EXTRA_KEYS_MESSAGE.format(expected_keys, unexpected_keys)
+        
+SIMPLE_TYPES = (int, float, bool, str)
+
+def _validate_type(value, expected_type, path="world"):
+    if isinstance(expected_type, dict):
+        return _validate_dictionary_type(value, expected_type, path)
+    elif isinstance(expected_type, list):
+        if not isinstance(value, list):
+            return path + WRONG_TYPE_MESSAGE.format(x=repr(value), x_type=_get_name(type(value)), y_type="list")
+        if not expected_type and value:
+            return path + WRONG_TYPE_MESSAGE.format(x=repr(value), x_type=_get_name(type(value)), y_type="empty list")
+        for index, element in enumerate(value):
+            reason = _validate_type(element, expected_type[0], path+"[{}]".format(index))
+            if reason:
+                return reason
+    elif isinstance(expected_type, SIMPLE_TYPES):
+        return path + NOT_A_TYPE_MESSAGE.format(x=repr(value), x_type=_get_name(type(value)), y=repr(expected_type), y_type=type(expected_type).__name__)
+    elif expected_type == float:
+        if not isinstance(value, (int, float)) and value is not None:
+            return path + WRONG_TYPE_MESSAGE.format(x=repr(value), x_type=_get_name(type(value)), y_type=_get_name(expected_type))
+    elif isinstance(value, bool) and expected_type != bool:
+        return path + WRONG_TYPE_MESSAGE.format(x=repr(value), x_type=_get_name(type(value)), y_type=_get_name(expected_type))
+    elif not isinstance(value, expected_type) and value is not None:
+        return path + WRONG_TYPE_MESSAGE.format(x=repr(value), x_type=_get_name(type(value)), y_type=_get_name(expected_type))
+    elif value == None and expected_type != None:
+        return path + WRONG_TYPE_MESSAGE.format(x=repr(value), x_type=_get_name(type(value)),
+                                                y_type=_get_name(expected_type))
+
+def assert_type(value, expected_type) -> bool:
+    """
+    Checks that the given value is of the expected_type.
+    
+    Args:
+        value (Any): Any kind of python value. Should have been computed by
+            the students' code (their actual answer).
+        expected_type (type): Any kind of type value. Should be in the format
+            used within CISC108. This includes support for literal composite
+            types (e.g., [int] and {str: int}) and record types.
+    Returns:
+        bool: Whether or not the assertion passed.
+    """
+    # Can we add in the line number and code?
+    line, code = get_line_code()
+    if None in (line, code):
+        context = ""
+    else:
+        context = MESSAGE_LINE_CODE.format(line=line, code=code)
+        student_tests.lines.append(line)
+    
+    reason = _validate_type(value, expected_type, "value")
+    student_tests.tests += 1
+    if reason is not None:
+        student_tests.failures += 1
+        if isinstance(expected_type, dict):
+            if isinstance(value, dict):
+                reason = "the "+reason
+            else:
+                reason = "the "+reason
+        print("FAILURE{context},".format(context=context), reason)
+        return False
+    elif not QUIET:
+        print(MESSAGE_GENERIC_SUCCESS.format(context=context))
+    student_tests.successes += 1
+    return True
+
