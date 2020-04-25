@@ -2,7 +2,7 @@ import setuptools
 
 setuptools.setup(
     name='CISC108',
-    version='0.1',
+    version='0.4',
     author='acbart',
     author_email='acbart@udel.edu',
     description='Tools to help students write code.',
