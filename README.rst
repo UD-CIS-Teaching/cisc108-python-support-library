@@ -27,6 +27,20 @@ Examples
     # Correctly handles floating points
     assert_equal(halve(10), 5.0)
     
+.. code-block:: python
+
+    from cisc108 import assert_type
+    
+    def make_list(num1, num2):
+        return [num1, num2]
+    
+    assert_type(make_list(5, 7), list)
+    
+.. code-block:: python
+    # What if we failed a test?
+    assert_type(make_list(5, 7), int)
+    # FAILURE - [line 5], value was the wrong type. Expected type was 'integer', but actual value was [5, 7] ('list').
+    
 Output
 ======
 
