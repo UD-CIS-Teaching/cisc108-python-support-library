@@ -35,8 +35,10 @@ Examples
         return [num1, num2]
     
     assert_type(make_list(5, 7), list)
-    
+
+
 .. code-block:: python
+
     # What if we failed a test?
     assert_type(make_list(5, 7), int)
     # FAILURE - [line 5], value was the wrong type. Expected type was 'integer', but actual value was [5, 7] ('list').
