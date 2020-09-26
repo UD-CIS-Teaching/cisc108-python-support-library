@@ -465,11 +465,11 @@ def _validate_type(value, expected_type, path="world"):
                 return reason
     elif isinstance(expected_type, SIMPLE_TYPES):
         return path + NOT_A_TYPE_MESSAGE.format(x=repr(value), x_type=_get_name(type(value)), y=repr(expected_type), y_type=type(expected_type).__name__)
+    elif isinstance(value, bool) and expected_type != bool:
+        return path + WRONG_TYPE_MESSAGE.format(x=repr(value), x_type=_get_name(type(value)), y_type=_get_name(expected_type))
     elif expected_type == float:
         if not isinstance(value, (int, float)) and value is not None:
             return path + WRONG_TYPE_MESSAGE.format(x=repr(value), x_type=_get_name(type(value)), y_type=_get_name(expected_type))
-    elif isinstance(value, bool) and expected_type != bool:
-        return path + WRONG_TYPE_MESSAGE.format(x=repr(value), x_type=_get_name(type(value)), y_type=_get_name(expected_type))
     elif not isinstance(value, expected_type) and value is not None:
         return path + WRONG_TYPE_MESSAGE.format(x=repr(value), x_type=_get_name(type(value)), y_type=_get_name(expected_type))
     elif value == None and expected_type != None:
